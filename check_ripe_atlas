@@ -1,0 +1,63 @@
+#!/usr/bin/perl -wT
+use strict;
+use autodie;
+
+
+use LWP::Simple;
+use JSON;
+
+
+my $jdata;
+
+sub add_extra_tags
+{
+  my $ret='';
+  foreach my $tag (@_) {
+    my $value = $jdata->{$tag};
+    #print "tag $tag = $value\n";
+    if (defined $value) {
+      $ret .= "$tag=$value ";
+    }
+  }
+  chomp $ret;
+  return $ret;
+}
+
+my $probe = $ARGV[0];
+
+if (!defined $probe) {
+  print "Usage: $0 <probe_id>\n";
+  exit 3;
+}
+
+if ($probe =~ /^(\d{1,20})$/) {
+  $probe = $1;
+} else {
+  print "ERROR: invalid probe number: $probe\n";
+  exit 3;
+}
+
+my $URL = 'https://atlas.ripe.net/api/v2/probes/' . $probe . '?format=json';
+
+my $content = get $URL;
+if (!defined ($content)) { die "could not get $URL\n"; }
+
+$jdata = decode_json $content;
+if (! $jdata) {
+  print "ERROR: returned data is not JSON|raw_data: $content\n";
+  exit 3;
+}
+
+#use Data::Dumper; print Dumper($jdata) . "\n";
+
+my $status = $jdata->{status}{name};
+
+my $extra = add_extra_tags (qw{ address_v4 address_v6 description });
+
+if ($status eq 'Connected') {
+  print "OK Connected|$extra \n";
+  exit 0;
+} else {
+  print "CRITICAL Status is $status|$extra\n";
+  exit 2;
+}
