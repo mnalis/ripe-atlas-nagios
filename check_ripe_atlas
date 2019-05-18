@@ -1,4 +1,5 @@
 #!/usr/bin/perl -wT
+# Matija Nalis <mnalis-perl@voyager.hr> GPLv3+ 2017-2019
 use strict;
 use autodie;
 
