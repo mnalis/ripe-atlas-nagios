@@ -7,10 +7,9 @@ use LWP::Simple;
 use JSON;
 
 
-my $jdata;
-
 sub add_extra_tags
 {
+  my $jdata = shift;
   my $ret='';
   foreach my $tag (@_) {
     my $value = $jdata->{$tag};
@@ -42,7 +41,7 @@ my $URL = 'https://atlas.ripe.net/api/v2/probes/' . $probe . '?format=json';
 my $content = get $URL;
 if (!defined ($content)) { die "could not get $URL\n"; }
 
-$jdata = decode_json $content;
+my $jdata = decode_json $content;
 if (! $jdata) {
   print "ERROR: returned data is not JSON|raw_data: $content\n";
   exit 3;
@@ -52,7 +51,7 @@ if (! $jdata) {
 
 my $status = $jdata->{status}{name};
 
-my $extra = add_extra_tags (qw{ address_v4 address_v6 description });
+my $extra = add_extra_tags ($jdata, qw{ address_v4 address_v6 description });
 
 if ($status eq 'Connected') {
   print "OK Connected|$extra \n";
